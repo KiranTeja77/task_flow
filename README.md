@@ -206,6 +206,10 @@ cd frontend && npm test       # Vitest
 
 **3. A broken test stops the pipeline.** In `backend/src/test/java/com/taskflow/TaskFlowApiTests.java` change an expectation, for example `status().isCreated()` to `status().isOk()` in `adminCanCreateTask`, then commit and push. The *Backend Test* stage turns red, the failed test is listed in the JUnit report, and no later stage runs: nothing is pushed or deployed, so the previous version keeps running. Revert the change to get a green build again.
 
+## Project guide
+
+[docs/PROJECT_GUIDE.md](docs/PROJECT_GUIDE.md) explains the DevOps side in plain language: why Docker and Jenkins are used, what every file does, the pipeline stage by stage, likely jury questions and a demo script.
+
 ## Screenshots
 
 Add images to [docs/screenshots](docs/screenshots) with these names: `login.png`, `dashboard.png`, `tasks.png`, `board.png`.
