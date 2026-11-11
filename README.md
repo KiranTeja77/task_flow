@@ -176,13 +176,11 @@ cd frontend && npm test       # Vitest
 
    ```bash
    docker build -t taskflow-jenkins ./jenkins
-   docker run -d --name jenkins -p 8081:8080 -p 50000:50000 \
-     -v jenkins_home:/var/jenkins_home \
-     -v /var/run/docker.sock:/var/run/docker.sock \
-     --add-host host.docker.internal:host-gateway \
-     taskflow-jenkins
+   docker run -d --name jenkins -p 8081:8080 -p 50000:50000 -v jenkins_home:/var/jenkins_home -v /var/run/docker.sock:/var/run/docker.sock --add-host host.docker.internal:host-gateway taskflow-jenkins
    docker logs jenkins        # copy the initial admin password
    ```
+
+   The command is on one line so it works in PowerShell, cmd and bash.
 
    The Docker socket mount lets pipeline builds use the host's Docker, and `host.docker.internal` lets the health check reach the deployed app.
 
