@@ -3,7 +3,6 @@ pipeline {
 
     environment {
         DOCKERHUB        = credentials('dockerhub-credentials')   // exposes DOCKERHUB_USR / DOCKERHUB_PSW
-        DOCKERHUB_USER   = "${DOCKERHUB_USR}"
         IMAGE_TAG        = "${BUILD_NUMBER}"
         APP_VERSION      = '1.0'
         COMPOSE_PROJECT_NAME = 'taskflow'
@@ -24,6 +23,8 @@ pipeline {
                 checkout scm
                 script {
                     env.GIT_COMMIT = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                    // Docker image names must be lowercase, whatever case the username was saved in
+                    env.DOCKERHUB_USER = env.DOCKERHUB_USR.toLowerCase()
                 }
                 echo "Building ${APP_VERSION} · build #${BUILD_NUMBER} · ${env.GIT_COMMIT}"
             }
@@ -66,7 +67,7 @@ pipeline {
 
         stage('Push to Docker Hub') {
             steps {
-                sh 'echo "$DOCKERHUB_PSW" | docker login -u "$DOCKERHUB_USR" --password-stdin'
+                sh 'printf %s "$DOCKERHUB_PSW" | docker login -u "$DOCKERHUB_USER" --password-stdin'
                 sh '''
                     docker push ${DOCKERHUB_USER}/taskflow-backend:${IMAGE_TAG}
                     docker push ${DOCKERHUB_USER}/taskflow-backend:latest
