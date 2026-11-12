@@ -47,7 +47,7 @@ Without DevOps, a typical student project looks like this:
 | --- | --- | --- |
 | **Source code** | The files developers write | `backend/src`, `frontend/src` |
 | **Build** | Turning source code into something runnable | `mvn package` creates a `.jar`; `npm run build` creates static HTML/JS/CSS; `docker build` creates an image |
-| **Test** | Code that checks other code works | 12 JUnit tests (backend), 5 Vitest tests (frontend) |
+| **Test** | Code that checks other code works | 15 JUnit tests (backend), 7 Vitest tests (frontend) |
 | **CI (Continuous Integration)** | Automatically build and test every change | Jenkins stages 1 to 3 |
 | **CD (Continuous Delivery/Deployment)** | Automatically ship tested changes to where they run | Jenkins stages 4 to 7 |
 | **Pipeline** | An ordered list of automated steps; if one fails, it stops | The `Jenkinsfile` |
@@ -180,7 +180,7 @@ flowchart LR
 | # | Stage | What it does | Why it exists |
 | --- | --- | --- | --- |
 | 1 | **Checkout** | Pulls the code from GitHub; reads the short git commit hash | Jenkins works on a clean copy of exactly the code that was pushed |
-| 2 | **Backend Test** | `mvn test` runs the 12 JUnit tests; the JUnit report is published | Catch backend bugs before shipping. **Failure stops everything** |
+| 2 | **Backend Test** | `mvn test` runs the 15 JUnit tests; the JUnit report is published | Catch backend bugs before shipping. **Failure stops everything** |
 | 3 | **Frontend Test & Build** | `npm ci` (clean install), `npm test`, `npm run build` | Catch frontend bugs and prove it compiles |
 | 4 | **Docker Build** | `docker compose build` builds both images, tagged with the **build number** and `latest` | Packages the tested code. The build number and commit are baked in so the app can report them |
 | 5 | **Push to Docker Hub** | Logs in with `dockerhub-credentials` and pushes the images | Stores the images in a registry so any server can pull them. Keeps a history of every build |
@@ -309,7 +309,7 @@ task_flow/
 
 ## 9. The application, briefly (the "Dev" half)
 
-- **Roles:** ADMIN can create, edit, assign and delete tasks. MEMBER can only change the status of tasks assigned to them. Enforced in the backend (`SecurityConfig` + `TaskController`), not just by hiding buttons.
+- **Roles:** ADMIN can create, edit, assign and delete tasks, filter by member, and add new members or admins (Team page, `POST /api/users`). MEMBER can see all tasks (with a "My tasks" toggle) but only change the status of tasks assigned to them. Enforced in the backend (`SecurityConfig` + `TaskController`), not just by hiding buttons.
 - **Login:** user logs in, backend returns a **JWT** (signed token). The frontend sends it as `Authorization: Bearer <token>` on every request. Passwords are stored as **BCrypt hashes**.
 - **Dashboard:** `/api/dashboard/stats` returns totals, overdue count, tasks per member and status split; Recharts draws the bar and donut charts.
 - **Seed data:** the first time the backend starts with an empty database, `DataSeeder` inserts demo users and 20 tasks.

@@ -17,8 +17,11 @@ A small team task manager built as a DevOps mini project. Managers (admins) crea
 
 - JWT login and registration with two roles: `ADMIN` (manager) and `MEMBER`
 - Admins create, edit, assign and delete tasks; members update the status of their own tasks
-- Dashboard with four stat cards, a tasks-per-member bar chart and a status donut chart
+- Admin dashboard: four stat cards, a tasks-per-member bar chart and a status donut chart
+- Member dashboard: personal To do / In progress / Done / Overdue counts, an "Up next" list of their open tasks (status can be changed right there) and their own status donut
 - Tasks table with status and priority filters, search, and a create/edit modal
+- Everyone sees all tasks, and a **My tasks** toggle shows only the ones assigned to you; admins can also filter by member (or unassigned)
+- Admin-only **Team** page lists everyone with their open-task count and adds new members **or admins**
 - Kanban board (To Do / In Progress / Done) where changing the status moves the card
 - `/api/system/info` reports version, Jenkins build number and git commit, shown in the UI footer, e.g. `v1.0 · build #12 · a1b2c3d`
 - Demo data seeded on first start
@@ -94,7 +97,7 @@ task_flow/
 │   ├── src/test/java/                MockMvc tests
 │   └── Dockerfile                    Maven build stage -> JRE runtime stage
 ├── frontend/                React app
-│   ├── src/pages/                    Login, Dashboard, Tasks, Board
+│   ├── src/pages/                    Login, Dashboard, Tasks, Board, Team
 │   ├── src/components/               Layout, modal, badges
 │   ├── nginx.conf                    Serves the app, proxies /api to the backend
 │   └── Dockerfile                    Node build stage -> Nginx
@@ -134,7 +137,7 @@ The first start takes a bit longer while the backend creates the tables and seed
 | Member | Rahul Verma    | rahul@taskflow.com | `Member@123` |
 | Member | Sneha Kulkarni | sneha@taskflow.com | `Member@123` |
 
-New accounts created from the Register form are always `MEMBER`.
+New accounts created from the Register form are always `MEMBER`. To create another `ADMIN`, log in as an admin and use the **Team** page.
 
 ## Run without Docker (development)
 
@@ -149,7 +152,7 @@ cd frontend && npm install && npm run dev
 ## Run the tests
 
 ```bash
-cd backend && mvn test        # 12 MockMvc tests on an in-memory H2 database
+cd backend && mvn test        # 15 MockMvc tests on an in-memory H2 database
 cd frontend && npm test       # Vitest
 ```
 
@@ -166,6 +169,7 @@ cd frontend && npm test       # Vitest
 | PATCH  | `/api/tasks/{id}/status` | admin, or the assignee |
 | DELETE | `/api/tasks/{id}`        | admin                  |
 | GET    | `/api/users`             | logged in              |
+| POST   | `/api/users`             | admin (member or admin)|
 | GET    | `/api/dashboard/stats`   | logged in              |
 | GET    | `/api/system/info`       | public                 |
 | GET    | `/actuator/health`       | public                 |

@@ -13,6 +13,11 @@ public final class Dtos {
     public record RegisterRequest(@NotBlank String name, @Email @NotBlank String email,
                                   @NotBlank @Size(min = 6, message = "must be at least 6 characters") String password) {}
 
+    /** Admin-created account; unlike self-registration the role can be chosen. */
+    public record CreateUserRequest(@NotBlank String name, @Email @NotBlank String email,
+                                    @NotBlank @Size(min = 6, message = "must be at least 6 characters") String password,
+                                    @NotNull Role role) {}
+
     public record UserDto(Long id, String name, String email, Role role) {
         public static UserDto of(User u) { return new UserDto(u.getId(), u.getName(), u.getEmail(), u.getRole()); }
     }

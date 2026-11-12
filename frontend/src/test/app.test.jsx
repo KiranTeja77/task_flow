@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import api from '../api'
 import { AuthProvider, ProtectedRoute } from '../auth'
 import { StatusBadge } from '../components/ui'
-import { filterTasks, formatSystemInfo } from '../lib'
+import { filterTasks, formatSystemInfo, myStats } from '../lib'
 import Login from '../pages/Login'
 import { ToastProvider } from '../toast'
 
@@ -26,6 +26,31 @@ describe('task filtering', () => {
     expect(filterTasks(tasks, { status: 'DONE', priority: 'HIGH' })).toHaveLength(1)
     expect(filterTasks(tasks, { search: 'neha' }).map((t) => t.id)).toEqual([2])
     expect(filterTasks(tasks, {})).toHaveLength(3)
+  })
+
+  it('filters by member and by unassigned', () => {
+    const withIds = [
+      { ...tasks[0], assigneeId: 10 },
+      { ...tasks[1], assigneeId: 11 },
+      { ...tasks[2], assigneeId: null },
+    ]
+    expect(filterTasks(withIds, { assigneeId: '10' }).map((t) => t.id)).toEqual([1])
+    expect(filterTasks(withIds, { assigneeId: 'none' }).map((t) => t.id)).toEqual([3])
+    expect(filterTasks(withIds, { assigneeId: '' })).toHaveLength(3)
+  })
+})
+
+describe('member dashboard numbers', () => {
+  it('counts only the member\'s own tasks and sorts open ones by due date', () => {
+    const list = [
+      { id: 1, assigneeId: 7, status: 'TODO', overdue: true, dueDate: '2026-01-02' },
+      { id: 2, assigneeId: 7, status: 'IN_PROGRESS', overdue: false, dueDate: '2026-01-01' },
+      { id: 3, assigneeId: 7, status: 'DONE', overdue: true, dueDate: '2025-12-01' },
+      { id: 4, assigneeId: 8, status: 'TODO', overdue: true, dueDate: '2025-12-01' },
+    ]
+    const s = myStats(list, 7)
+    expect(s).toMatchObject({ total: 3, todo: 1, inProgress: 1, done: 1, overdue: 1 })
+    expect(s.open.map((t) => t.id)).toEqual([2, 1])
   })
 })
 

@@ -24,6 +24,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(a -> a
                 .requestMatchers("/actuator/health/**", "/api/system/info",
                                  "/api/auth/login", "/api/auth/register").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/users").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/tasks").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/tasks/*").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/tasks/*").hasRole("ADMIN")

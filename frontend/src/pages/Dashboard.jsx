@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend } from 'recharts'
 import api from '../api'
-import { PageHeader, Spinner } from '../components/ui'
-import { STATUS_LABEL } from '../lib'
+import { Link } from 'react-router-dom'
+import { useAuth } from '../auth'
+import { EmptyState, PageHeader, PriorityBadge, Spinner } from '../components/ui'
+import { useTasks } from '../hooks'
+import { STATUSES, STATUS_LABEL, formatDate, myStats } from '../lib'
 
 const SPLIT_COLORS = { TODO: '#9ca3af', IN_PROGRESS: '#6366f1', DONE: '#10b981' }
 
@@ -16,6 +19,93 @@ function StatCard({ label, value, tone = 'text-gray-900' }) {
 }
 
 export default function Dashboard() {
+  const { isAdmin } = useAuth()
+  return isAdmin ? <TeamDashboard /> : <MemberDashboard />
+}
+
+/** What a member sees: only their own work. */
+function MemberDashboard() {
+  const { user } = useAuth()
+  const { tasks, loading, failed, canChangeStatus, changeStatus } = useTasks()
+
+  if (loading) return <Spinner />
+  if (failed) return <p className="text-sm text-red-600">Could not load the dashboard.</p>
+
+  const s = myStats(tasks, user.id)
+  const split = STATUSES.map((k) => ({ key: k, label: STATUS_LABEL[k], count: { TODO: s.todo, IN_PROGRESS: s.inProgress, DONE: s.done }[k] }))
+
+  return (
+    <div>
+      <PageHeader title={`Hi, ${user.name.split(' ')[0]}`} subtitle={`You have ${s.total} task${s.total === 1 ? '' : 's'} assigned`} />
+
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4" data-testid="my-stats">
+        <StatCard label="To do" value={s.todo} />
+        <StatCard label="In progress" value={s.inProgress} />
+        <StatCard label="Done" value={s.done} />
+        <StatCard label="Overdue" value={s.overdue} tone={s.overdue > 0 ? 'text-red-600' : 'text-gray-900'} />
+      </div>
+
+      {s.total === 0 ? (
+        <div className="card mt-6">
+          <EmptyState title="Nothing assigned to you yet" hint="When a manager assigns you a task it will show up here." />
+        </div>
+      ) : (
+        <div className="mt-6 grid gap-4 lg:grid-cols-5">
+          <section className="card lg:col-span-3">
+            <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+              <h2 className="text-sm font-semibold">Up next</h2>
+              <Link to="/tasks" className="text-xs text-indigo-600 hover:underline">All tasks</Link>
+            </div>
+            {s.open.length === 0 ? (
+              <p className="px-4 py-8 text-center text-sm text-gray-500">All caught up — nothing open.</p>
+            ) : (
+              <ul className="divide-y divide-gray-100">
+                {s.open.map((t) => (
+                  <li key={t.id} className="flex items-center gap-3 px-4 py-2.5 text-sm">
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-medium">{t.title}</div>
+                      <div className={`text-xs ${t.overdue ? 'font-medium text-red-600' : 'text-gray-500'}`}>
+                        {t.overdue ? 'Overdue · ' : 'Due '}{formatDate(t.dueDate)}
+                      </div>
+                    </div>
+                    <PriorityBadge priority={t.priority} />
+                    {canChangeStatus(t) && (
+                      <select
+                        className="rounded border border-gray-200 bg-white px-1.5 py-0.5 text-xs"
+                        value={t.status}
+                        onChange={(e) => changeStatus(t, e.target.value)}
+                        aria-label={`Status of ${t.title}`}
+                      >
+                        {STATUSES.map((k) => <option key={k} value={k}>{STATUS_LABEL[k]}</option>)}
+                      </select>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="card p-4 lg:col-span-2">
+            <h2 className="mb-3 text-sm font-semibold">My status split</h2>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={split} dataKey="count" nameKey="label" innerRadius={55} outerRadius={90} paddingAngle={2} stroke="#fff">
+                    {split.map((x) => <Cell key={x.key} fill={SPLIT_COLORS[x.key]} />)}
+                  </Pie>
+                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 4, border: '1px solid #e5e7eb', boxShadow: 'none' }} />
+                  <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </section>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function TeamDashboard() {
   const [stats, setStats] = useState(null)
   const [failed, setFailed] = useState(false)
 

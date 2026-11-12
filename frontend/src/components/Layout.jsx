@@ -8,6 +8,7 @@ const NAV = [
   { to: '/', label: 'Dashboard', end: true, d: 'M3 12l9-8 9 8M5 10v10h5v-6h4v6h5V10' },
   { to: '/tasks', label: 'Tasks', d: 'M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01' },
   { to: '/board', label: 'Board', d: 'M4 4h5v16H4zM10 4h5v10h-5zM16 4h4v13h-4z' },
+  { to: '/team', label: 'Team', adminOnly: true, d: 'M16 11a3 3 0 100-6 3 3 0 000 6zM8 11a3 3 0 100-6 3 3 0 000 6zM2 20c0-3 3-5 6-5s6 2 6 5M14 15c3 0 8 1 8 5' },
 ]
 
 function Icon({ d }) {
@@ -34,7 +35,8 @@ export function Footer() {
 }
 
 export default function Layout() {
-  const { user, logout } = useAuth()
+  const { user, isAdmin, logout } = useAuth()
+  const nav = NAV.filter((n) => !n.adminOnly || isAdmin)
 
   return (
     <div className="flex min-h-screen">
@@ -46,7 +48,7 @@ export default function Layout() {
           <span className="font-semibold">TaskFlow</span>
         </div>
         <nav className="flex flex-col gap-0.5 p-2">
-          {NAV.map((n) => (
+          {nav.map((n) => (
             <NavLink
               key={n.to}
               to={n.to}
@@ -67,7 +69,7 @@ export default function Layout() {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-12 items-center justify-between border-b border-gray-200 bg-white px-6">
           <nav className="flex gap-3 md:hidden">
-            {NAV.map((n) => (
+            {nav.map((n) => (
               <NavLink key={n.to} to={n.to} end={n.end} className="text-sm text-gray-600">
                 {n.label}
               </NavLink>

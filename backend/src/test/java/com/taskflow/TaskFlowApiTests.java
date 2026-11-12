@@ -79,7 +79,38 @@ class TaskFlowApiTests {
     }
 
     @Test
-    void tasksRequireAuthentication() throws Exception {
+    void adminCanAddMemberAndAnotherAdmin() throws Exception {
+        String auth = login("admin@test.com");
+        mvc.perform(post("/api/users").header("Authorization", auth).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"New Member\",\"email\":\"nm@test.com\",\"password\":\"secret1\",\"role\":\"MEMBER\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.role").value("MEMBER"));
+        mvc.perform(post("/api/users").header("Authorization", auth).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"New Admin\",\"email\":\"na@test.com\",\"password\":\"secret1\",\"role\":\"ADMIN\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.role").value("ADMIN"));
+        // the new admin can log in
+        login("na@test.com");
+    }
+
+    @Test
+    void memberCannotAddUsers() throws Exception {
+        mvc.perform(post("/api/users").header("Authorization", login("member@test.com"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"X\",\"email\":\"x@test.com\",\"password\":\"secret1\",\"role\":\"ADMIN\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void addingUserWithDuplicateEmailIsRejected() throws Exception {
+        mvc.perform(post("/api/users").header("Authorization", login("admin@test.com"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Dup\",\"email\":\"MEMBER@test.com\",\"password\":\"secret1\",\"role\":\"MEMBER\"}"))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void tasksRequireAuthentication()throws Exception {
         mvc.perform(get("/api/tasks")).andExpect(status().isUnauthorized());
     }
 
